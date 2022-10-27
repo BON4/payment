@@ -1,0 +1,31 @@
+output   = "./internal/domain/boil_postgres"
+wipe     = true
+pkgname  = "models"
+add-enum-types = true
+add-global-variants = true
+
+[[types]]
+  [types.match]
+    type = "types.Decimal"
+    nullable = false
+  [types.replace]
+    type = "atypes.Decimal"
+  [types.imports]
+    third_party = ['"github.com/BON4/payment/internal/pkg/atypes"']
+    
+[[types]]
+  [types.match]
+    type = "time.Time"
+    nullable = false
+  [types.replace]
+    type = "atypes.DateTime"
+  [types.imports]
+    third_party = ['"github.com/BON4/payment/internal/pkg/atypes"']
+
+[psql]
+  dbname = "payment"
+  host   = "localhost"
+  port   = 5432
+  user   = "root"
+  pass   = "secret"
+  sslmode = "disable"
