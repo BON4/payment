@@ -28,8 +28,8 @@ type TransactonHistory struct {
 	RequestId          int64             `csv:"RequestId" boil:"RequestId" json:"RequestId" toml:"RequestId" yaml:"RequestId"`
 	TerminalId         int64             `csv:"TerminalId" boil:"TerminalId" json:"TerminalId" toml:"TerminalId" yaml:"TerminalId"`
 	PartnerObjectId    int64             `csv:"PartnerObjectId" boil:"PartnerObjectId" json:"PartnerObjectId" toml:"PartnerObjectId" yaml:"PartnerObjectId"`
-	AmountTotal        int64             `csv:"AmountTotal" boil:"AmountTotal" json:"AmountTotal" toml:"AmountTotal" yaml:"AmountTotal"`
-	AmountOriginal     int64             `csv:"AmountOriginal" boil:"AmountOriginal" json:"AmountOriginal" toml:"AmountOriginal" yaml:"AmountOriginal"`
+	AmountTotal        atypes.Decimal    `csv:"AmountTotal" boil:"AmountTotal" json:"AmountTotal" toml:"AmountTotal" yaml:"AmountTotal"`
+	AmountOriginal     atypes.Decimal    `csv:"AmountOriginal" boil:"AmountOriginal" json:"AmountOriginal" toml:"AmountOriginal" yaml:"AmountOriginal"`
 	CommissionPS       atypes.Decimal    `csv:"CommissionPS" boil:"CommissionPS" json:"CommissionPS" toml:"CommissionPS" yaml:"CommissionPS"`
 	CommissionClient   atypes.Decimal    `csv:"CommissionClient" boil:"CommissionClient" json:"CommissionClient" toml:"CommissionClient" yaml:"CommissionClient"`
 	CommissionProvider atypes.Decimal    `csv:"CommissionProvider" boil:"CommissionProvider" json:"CommissionProvider" toml:"CommissionProvider" yaml:"CommissionProvider"`
@@ -284,8 +284,8 @@ var TransactonHistoryWhere = struct {
 	RequestId          whereHelperint64
 	TerminalId         whereHelperint64
 	PartnerObjectId    whereHelperint64
-	AmountTotal        whereHelperint64
-	AmountOriginal     whereHelperint64
+	AmountTotal        whereHelperatypes_Decimal
+	AmountOriginal     whereHelperatypes_Decimal
 	CommissionPS       whereHelperatypes_Decimal
 	CommissionClient   whereHelperatypes_Decimal
 	CommissionProvider whereHelperatypes_Decimal
@@ -306,8 +306,8 @@ var TransactonHistoryWhere = struct {
 	RequestId:          whereHelperint64{field: "\"transacton_history\".\"RequestId\""},
 	TerminalId:         whereHelperint64{field: "\"transacton_history\".\"TerminalId\""},
 	PartnerObjectId:    whereHelperint64{field: "\"transacton_history\".\"PartnerObjectId\""},
-	AmountTotal:        whereHelperint64{field: "\"transacton_history\".\"AmountTotal\""},
-	AmountOriginal:     whereHelperint64{field: "\"transacton_history\".\"AmountOriginal\""},
+	AmountTotal:        whereHelperatypes_Decimal{field: "\"transacton_history\".\"AmountTotal\""},
+	AmountOriginal:     whereHelperatypes_Decimal{field: "\"transacton_history\".\"AmountOriginal\""},
 	CommissionPS:       whereHelperatypes_Decimal{field: "\"transacton_history\".\"CommissionPS\""},
 	CommissionClient:   whereHelperatypes_Decimal{field: "\"transacton_history\".\"CommissionClient\""},
 	CommissionProvider: whereHelperatypes_Decimal{field: "\"transacton_history\".\"CommissionProvider\""},

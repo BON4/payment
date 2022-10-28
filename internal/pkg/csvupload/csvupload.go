@@ -22,11 +22,12 @@ type CopyFromSource interface {
 }
 
 type CSVUploader[T any] struct {
-	db    *sql.DB
-	names []string
+	db        *sql.DB
+	tableName string
+	names     []string
 }
 
-func NewCSVUploader[T any](db *sql.DB) *CSVUploader[T] {
+func NewCSVUploader[T any](db *sql.DB, tableName string) *CSVUploader[T] {
 	names := make([]string, 0, 1)
 
 	var t T
@@ -35,8 +36,9 @@ func NewCSVUploader[T any](db *sql.DB) *CSVUploader[T] {
 	}
 
 	return &CSVUploader[T]{
-		db:    db,
-		names: names,
+		db:        db,
+		tableName: tableName,
+		names:     names,
 	}
 }
 
@@ -53,13 +55,13 @@ func (c *CSVUploader[T]) Upload(ctx context.Context, tag string, source CopyFrom
 		return 0, err
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("transacton_history", c.names...))
+	stmt, err := tx.Prepare(pq.CopyIn(c.tableName, c.names...))
 	if err != nil {
 		return 0, err
 	}
 
 	var counter int64
-	for ; source.Next(); counter++ {
+	for ; source.Next() && ctx.Err() == nil; counter++ {
 		row, err := source.Values()
 		if err != nil {
 			if err == io.EOF {
@@ -90,11 +92,11 @@ func (c *CSVUploader[T]) Upload(ctx context.Context, tag string, source CopyFrom
 
 	err = stmt.Close()
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	return counter, nil

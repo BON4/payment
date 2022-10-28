@@ -9,30 +9,29 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-type Parser struct {
+type Unmarshaller struct {
 	u   *gocsv.Unmarshaller
 	err error
 }
 
-func NewTxHitoryParser(f *os.File) (csvupload.CopyFromSource, error) {
-
+func NewTxHitoryUnmarshaller(f *os.File) (csvupload.CopyFromSource, error) {
 	r := csv.NewReader(f)
 	u, err := gocsv.NewUnmarshaller(r, TransactonHistory{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &Parser{
+	return &Unmarshaller{
 		u: u,
 	}, nil
 }
 
-func (p *Parser) Next() bool {
+func (p *Unmarshaller) Next() bool {
 	return p.err == nil
 }
 
 // Values returns the values for the current row.
-func (p *Parser) Values() ([]any, error) {
+func (p *Unmarshaller) Values() ([]any, error) {
 	anymodel, err := p.u.Read()
 	if err != nil {
 		p.err = err
@@ -76,6 +75,6 @@ func (p *Parser) Values() ([]any, error) {
 
 // Err returns any error that has been encountered by the CopyFromSource. If
 // this is not nil *Conn.CopyFrom will abort the copy.
-func (p *Parser) Err() error {
+func (p *Unmarshaller) Err() error {
 	return p.err
 }

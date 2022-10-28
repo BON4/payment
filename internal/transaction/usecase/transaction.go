@@ -68,7 +68,7 @@ func (t *txUsecase) CSVCopyInsert(ctx context.Context, filePath string) (int64, 
 		panic(err)
 	}
 
-	par, err := domain.NewTxHitoryParser(file)
+	par, err := domain.NewTxHitoryUnmarshaller(file)
 	if err != nil {
 		panic(err)
 	}

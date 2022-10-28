@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"strconv"
+
 	boilmodels "github.com/BON4/payment/internal/domain/boil_postgres"
 	"github.com/BON4/payment/internal/pkg/atypes"
 )
@@ -26,8 +28,8 @@ type TransactonHistory struct {
 	RequestId          int64             `csv:"RequestId" boil:"RequestId" json:"RequestId" toml:"RequestId" yaml:"RequestId"`
 	TerminalId         int64             `csv:"TerminalId" boil:"TerminalId" json:"TerminalId" toml:"TerminalId" yaml:"TerminalId"`
 	PartnerObjectId    int64             `csv:"PartnerObjectId" boil:"PartnerObjectId" json:"PartnerObjectId" toml:"PartnerObjectId" yaml:"PartnerObjectId"`
-	AmountTotal        int64             `csv:"AmountTotal" boil:"AmountTotal" json:"AmountTotal" toml:"AmountTotal" yaml:"AmountTotal"`
-	AmountOriginal     int64             `csv:"AmountOriginal" boil:"AmountOriginal" json:"AmountOriginal" toml:"AmountOriginal" yaml:"AmountOriginal"`
+	AmountTotal        atypes.Decimal    `csv:"AmountTotal" boil:"AmountTotal" json:"AmountTotal" toml:"AmountTotal" yaml:"AmountTotal"`
+	AmountOriginal     atypes.Decimal    `csv:"AmountOriginal" boil:"AmountOriginal" json:"AmountOriginal" toml:"AmountOriginal" yaml:"AmountOriginal"`
 	CommissionPS       atypes.Decimal    `csv:"CommissionPS" boil:"CommissionPS" json:"CommissionPS" toml:"CommissionPS" yaml:"CommissionPS"`
 	CommissionClient   atypes.Decimal    `csv:"CommissionClient" boil:"CommissionClient" json:"CommissionClient" toml:"CommissionClient" yaml:"CommissionClient"`
 	CommissionProvider atypes.Decimal    `csv:"CommissionProvider" boil:"CommissionProvider" json:"CommissionProvider" toml:"CommissionProvider" yaml:"CommissionProvider"`
@@ -43,6 +45,30 @@ type TransactonHistory struct {
 	PayeeBankMfo       int64             `csv:"PayeeBankMfo" boil:"PayeeBankMfo" json:"PayeeBankMfo" toml:"PayeeBankMfo" yaml:"PayeeBankMfo"`
 	PayeeBankAccount   string            `csv:"PayeeBankAccount" boil:"PayeeBankAccount" json:"PayeeBankAccount" toml:"PayeeBankAccount" yaml:"PayeeBankAccount"`
 	PaymentNarrative   string            `csv:"PaymentNarrative" boil:"PaymentNarrative" json:"PaymentNarrative" toml:"PaymentNarrative" yaml:"PaymentNarrative"`
+}
+
+func (t *TransactonHistory) MarshalCSV(s []string) {
+	s[0] = strconv.Itoa(int(t.TransactionId))
+	s[1] = strconv.Itoa(int(t.RequestId))
+	s[2] = strconv.Itoa(int(t.TerminalId))
+	s[3] = strconv.Itoa(int(t.PartnerObjectId))
+	s[4] = t.AmountTotal.String()
+	s[5] = t.AmountOriginal.String()
+	s[6] = t.CommissionPS.String()
+	s[7] = t.CommissionClient.String()
+	s[8] = t.CommissionProvider.String()
+	s[9] = t.DateInput.String()
+	s[10] = t.DatePost.String()
+	s[11] = string(t.Status)
+	s[12] = string(t.PaymentType)
+	s[13] = t.PaymentNumber
+	s[14] = strconv.Itoa(int(t.ServiceId))
+	s[15] = t.Service
+	s[16] = strconv.Itoa(int(t.PayeeId))
+	s[17] = t.PayeeName
+	s[18] = strconv.Itoa(int(t.PayeeBankMfo))
+	s[19] = t.PayeeBankAccount
+	s[20] = t.PaymentNarrative
 }
 
 func BoilToDomainBinding(in *boilmodels.TransactonHistory, out *TransactonHistory) {

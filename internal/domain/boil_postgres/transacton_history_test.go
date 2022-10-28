@@ -568,7 +568,7 @@ func testTransactonHistoriesSelect(t *testing.T) {
 }
 
 var (
-	transactonHistoryDBTypes = map[string]string{`TransactionId`: `bigint`, `RequestId`: `bigint`, `TerminalId`: `bigint`, `PartnerObjectId`: `bigint`, `AmountTotal`: `bigint`, `AmountOriginal`: `bigint`, `CommissionPS`: `numeric`, `CommissionClient`: `numeric`, `CommissionProvider`: `numeric`, `DateInput`: `timestamp without time zone`, `DatePost`: `timestamp without time zone`, `Status`: `enum.transaction_status('accepted','declined')`, `PaymentType`: `enum.payment_type('cash','card')`, `PaymentNumber`: `text`, `ServiceId`: `bigint`, `Service`: `text`, `PayeeId`: `bigint`, `PayeeName`: `text`, `PayeeBankMfo`: `bigint`, `PayeeBankAccount`: `text`, `PaymentNarrative`: `text`}
+	transactonHistoryDBTypes = map[string]string{`TransactionId`: `bigint`, `RequestId`: `bigint`, `TerminalId`: `bigint`, `PartnerObjectId`: `bigint`, `AmountTotal`: `numeric`, `AmountOriginal`: `numeric`, `CommissionPS`: `numeric`, `CommissionClient`: `numeric`, `CommissionProvider`: `numeric`, `DateInput`: `timestamp without time zone`, `DatePost`: `timestamp without time zone`, `Status`: `enum.transaction_status('accepted','declined')`, `PaymentType`: `enum.payment_type('cash','card')`, `PaymentNumber`: `text`, `ServiceId`: `bigint`, `Service`: `text`, `PayeeId`: `bigint`, `PayeeName`: `text`, `PayeeBankMfo`: `bigint`, `PayeeBankAccount`: `text`, `PaymentNarrative`: `text`}
 	_                        = bytes.MinRead
 )
 
