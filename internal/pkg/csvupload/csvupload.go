@@ -3,7 +3,6 @@ package csvupload
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"io"
 
 	"github.com/fatih/structs"
@@ -23,12 +22,21 @@ type CopyFromSource interface {
 }
 
 type CSVUploader[T any] struct {
-	db *sql.DB
+	db    *sql.DB
+	names []string
 }
 
 func NewCSVUploader[T any](db *sql.DB) *CSVUploader[T] {
+	names := make([]string, 0, 1)
+
+	var t T
+	for _, field := range structs.Fields(t) {
+		names = append(names, field.Tag("boil"))
+	}
+
 	return &CSVUploader[T]{
-		db: db,
+		db:    db,
+		names: names,
 	}
 }
 
@@ -39,29 +47,20 @@ func (c *CSVUploader[T]) Upload(ctx context.Context, tag string, source CopyFrom
 	// 	return err
 	// }
 
-	names := make([]string, 0, 1)
-
-	var t T
-	for i, field := range structs.Fields(t) {
-		names = append(names, field.Tag("boil"))
-		fmt.Printf("%d: %s\n", i, field.Name())
-	}
-
 	tx, err := c.db.Begin()
 
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("transacton_history", names...))
+	stmt, err := tx.Prepare(pq.CopyIn("transacton_history", c.names...))
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	var counter int64
 	for ; source.Next(); counter++ {
 		row, err := source.Values()
-		fmt.Println(row, err)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -71,7 +70,7 @@ func (c *CSVUploader[T]) Upload(ctx context.Context, tag string, source CopyFrom
 
 		_, err = stmt.Exec(row...)
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 	}
 

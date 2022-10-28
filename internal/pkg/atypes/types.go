@@ -33,8 +33,8 @@ func (date DateTime) Value() (driver.Value, error) {
 }
 
 func (date *DateTime) Scan(src interface{}) (err error) {
-	date.Time, err = time.Parse("2006-01-02 15:04:05", string(src.([]byte)))
-	return err
+	date.Time = src.(time.Time)
+	return nil
 }
 
 type Decimal struct {

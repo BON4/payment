@@ -24,5 +24,6 @@ type FindTxRequest struct {
 
 type TxUsecase interface {
 	Create(ctx context.Context, tx *TransactonHistory) error
+	CSVCopyInsert(ctx context.Context, filePath string) (int64, error)
 	List(ctx context.Context, cond FindTxRequest) ([]*TransactonHistory, error)
 }

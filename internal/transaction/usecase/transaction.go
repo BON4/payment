@@ -3,23 +3,25 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"os"
 
 	"github.com/BON4/payment/internal/domain"
 	boilmodels "github.com/BON4/payment/internal/domain/boil_postgres"
-	"github.com/fatih/structs"
-	"github.com/lib/pq"
+	"github.com/BON4/payment/internal/pkg/csvupload"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type txUsecase struct {
-	db *sql.DB
+	db  *sql.DB
+	csv *csvupload.CSVUploader[domain.TransactonHistory]
 }
 
 func NewTxUsecase(db *sql.DB) domain.TxUsecase {
 	return &txUsecase{
-		db: db,
+		db:  db,
+		csv: csvupload.NewCSVUploader[domain.TransactonHistory](db),
 	}
 }
 
@@ -60,85 +62,62 @@ func (t *txUsecase) BulkInsert(ctx context.Context, data []*domain.TransactonHis
 	return nil
 }
 
-func (t *txUsecase) CSVCopy(ctx context.Context, filePath string) error {
-	return nil
-}
-
-func (t *txUsecase) CopyInsert(ctx context.Context, data []*domain.TransactonHistory) error {
-
-	tx, err := t.db.Begin()
+func (t *txUsecase) CSVCopyInsert(ctx context.Context, filePath string) (int64, error) {
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0444)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	names := make([]string, 0)
-
-	for _, field := range structs.Fields(domain.TransactonHistory{}) {
-		names = append(names, field.Tag("boil"))
-	}
-
-	stmt, err := tx.PrepareContext(ctx, pq.CopyInSchema("db", "table", names...))
+	par, err := domain.NewTxHitoryParser(file)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	for _, t := range data {
+	defer file.Close()
 
-		_, err := stmt.Exec(t.Transactionid, t.Requestid, t.Terminalid, t.Partnerobjectid, t.Amounttotal, t.Amountoriginal, t.Commissionclient, t.Commissionprovider, t.Dateinput, t.Datepost, t.Status, t.Paymenttype, t.Paymentnumber, t.Serviceid, t.Service, t.Payeeid, t.Payeename, t.Payeebankmfo, t.Payeebankaccount, t.Paymentnarrative)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-
-	}
-
-	err = stmt.Close()
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return t.csv.Upload(context.Background(), "boil", par)
 }
 
 func (t *txUsecase) List(ctx context.Context, cond domain.FindTxRequest) ([]*domain.TransactonHistory, error) {
 	var conds []qm.QueryMod = make([]qm.QueryMod, 0, 1)
 
 	if cond.TransactionID != nil {
-		conds = append(conds, qm.Where("transactionid=?", cond.TransactionID))
+		conds = append(conds, qm.Where(`"TransactionId"=?`, cond.TransactionID))
 	}
 
 	if len(cond.TerminalIDs) > 0 {
-		conds = append(conds, qm.WhereIn("terminalid in ?", cond.TerminalIDs))
+		//TODO: not my problem or sqlboiler problem. Rather the Go itself.
+		//Maby try sqlx.In()
+		convertedIDs := make([]interface{}, len(cond.TerminalIDs))
+		for index, num := range cond.TerminalIDs {
+			convertedIDs[index] = num
+		}
+		conds = append(conds, qm.WhereIn(`"TerminalId" IN ?`, convertedIDs...))
 	}
 
 	if cond.Status != nil {
-		conds = append(conds, qm.Where("status=?", cond.Status))
+		conds = append(conds, qm.Where(`"Status"=?`, cond.Status))
 	}
 
 	if cond.PaymentType != nil {
-		conds = append(conds, qm.Where("PaymentType=?", cond.PaymentType))
+		conds = append(conds, qm.Where(`"PaymentType"=?`, cond.PaymentType))
 	}
 
 	if cond.PaymentNarrative != nil {
-		conds = append(conds, qm.Where("PaymentNarrative like %?%", cond.PaymentType))
+		conds = append(conds, qm.Where(`"PaymentNarrative" LIKE ?`, "%"+*cond.PaymentNarrative+"%"))
 	}
 
 	if cond.PostDateFrom != nil {
-		year, mouth, day := cond.PostDateFrom.Date()
-		conds = append(conds, qm.Where("DatePost >= '?-?-?'::date", year, mouth, day))
+		conds = append(conds, qm.Where(`"DatePost" >= ?`, cond.PostDateFrom))
 	}
 
 	if cond.PostDateTo != nil {
-		year, mouth, day := cond.PostDateTo.Date()
-		//TODO: check if +'1 day' is needed
-		conds = append(conds, qm.Where("DatePost < '?-?-?'::date + '1 day'::date", year, mouth, day))
+		conds = append(conds, qm.Where(`"DatePost" < ?`, cond.PostDateTo.AddDate(0, 0, 1)))
 	}
 
-	conds = append(conds, qm.Offset(int(cond.PageNumber)), qm.Limit(int(cond.PageSize)))
+	if cond.PageSize > 0 {
+		conds = append(conds, qm.Offset(int(cond.PageNumber*cond.PageSize)), qm.Limit(int(cond.PageSize)))
+	}
 
 	txs, err := boilmodels.TransactonHistories(conds...).All(ctx, t.db)
 	if err != nil {
