@@ -3,7 +3,7 @@ package domain
 import (
 	"encoding/csv"
 	"errors"
-	"os"
+	"io"
 
 	"github.com/BON4/payment/internal/pkg/csvupload"
 	"github.com/gocarina/gocsv"
@@ -14,9 +14,9 @@ type Unmarshaller struct {
 	err error
 }
 
-func NewTxHitoryUnmarshaller(f *os.File) (csvupload.CopyFromSource, error) {
-	r := csv.NewReader(f)
-	u, err := gocsv.NewUnmarshaller(r, TransactonHistory{})
+func NewTxHitoryUnmarshaller(r io.Reader) (csvupload.CopyFromSource, error) {
+	csr := csv.NewReader(r)
+	u, err := gocsv.NewUnmarshaller(csr, TransactonHistory{})
 	if err != nil {
 		return nil, err
 	}

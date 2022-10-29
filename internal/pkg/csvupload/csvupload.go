@@ -24,10 +24,11 @@ type CopyFromSource interface {
 type CSVUploader[T any] struct {
 	db        *sql.DB
 	tableName string
+	tag       string
 	names     []string
 }
 
-func NewCSVUploader[T any](db *sql.DB, tableName string) *CSVUploader[T] {
+func NewCSVUploader[T any](db *sql.DB, tableName, tag string) *CSVUploader[T] {
 	names := make([]string, 0, 1)
 
 	var t T
@@ -39,11 +40,12 @@ func NewCSVUploader[T any](db *sql.DB, tableName string) *CSVUploader[T] {
 		db:        db,
 		tableName: tableName,
 		names:     names,
+		tag:       tag,
 	}
 }
 
 // Upload - upload from csv reader to db. Where tag - struct field tag for db column names
-func (c *CSVUploader[T]) Upload(ctx context.Context, tag string, source CopyFromSource) (int64, error) {
+func (c *CSVUploader[T]) Upload(ctx context.Context, source CopyFromSource) (int64, error) {
 	// file, err := os.OpenFile(filepath, os.O_RDONLY, 0777)
 	// if err != nil {
 	// 	return err

@@ -68,9 +68,11 @@ func TestCSVCopyInsert(t *testing.T) {
 		return
 	}
 
+	file.Seek(0, 0)
+
 	tuc := usecase.NewTxUsecase(db)
 
-	n, err := tuc.CSVCopyInsert(context.Background(), testExampleCSV)
+	n, err := tuc.CSVInsert(context.Background(), file)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -90,9 +92,14 @@ func TestList(t *testing.T) {
 		}
 	}()
 
+	file, err := os.OpenFile(testExampleCSV, os.O_RDONLY, 0444)
+	if err != nil {
+		panic(err)
+	}
+
 	tuc := usecase.NewTxUsecase(db)
 
-	n, err := tuc.CSVCopyInsert(context.Background(), testExampleCSV)
+	n, err := tuc.CSVInsert(context.Background(), file)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -469,10 +476,6 @@ func TestList(t *testing.T) {
 		if len(txs) == 0 {
 			t.Fatalf("Data shoud be returned")
 			return
-		}
-
-		for _, tx := range txs {
-			t.Logf("%+v\n", tx)
 		}
 	})
 	// for _, tx := range txs {

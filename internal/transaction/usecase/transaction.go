@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"os"
+	"io"
 
 	"github.com/BON4/payment/internal/domain"
 	boilmodels "github.com/BON4/payment/internal/domain/boil_postgres"
+	"github.com/BON4/payment/internal/pkg/csvdownload"
 	"github.com/BON4/payment/internal/pkg/csvupload"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -14,14 +15,16 @@ import (
 )
 
 type txUsecase struct {
-	db  *sql.DB
-	csv *csvupload.CSVUploader[domain.TransactonHistory]
+	db *sql.DB
+	up *csvupload.CSVUploader[domain.TransactonHistory]
+	dw *csvdownload.CSVDownloader[domain.TransactonHistory]
 }
 
 func NewTxUsecase(db *sql.DB) domain.TxUsecase {
 	return &txUsecase{
-		db:  db,
-		csv: csvupload.NewCSVUploader[domain.TransactonHistory](db),
+		db: db,
+		up: csvupload.NewCSVUploader[domain.TransactonHistory](db, "transacton_history", "boil"),
+		dw: csvdownload.NewCSVDownloader[domain.TransactonHistory](db, "transacton_history", "boil"),
 	}
 }
 
@@ -62,23 +65,41 @@ func (t *txUsecase) BulkInsert(ctx context.Context, data []*domain.TransactonHis
 	return nil
 }
 
-func (t *txUsecase) CSVCopyInsert(ctx context.Context, filePath string) (int64, error) {
-	file, err := os.OpenFile(filePath, os.O_RDONLY, 0444)
+func (t *txUsecase) CSVInsert(ctx context.Context, r io.Reader) (int64, error) {
+	unmarshaler, err := domain.NewTxHitoryUnmarshaller(r)
 	if err != nil {
 		panic(err)
 	}
 
-	par, err := domain.NewTxHitoryUnmarshaller(file)
-	if err != nil {
-		panic(err)
-	}
+	return t.up.Upload(context.Background(), unmarshaler)
+}
 
-	defer file.Close()
+func (t *txUsecase) CSVRetrive(ctx context.Context, cond domain.FindTxRequest, w io.Writer) error {
+	marshaler := domain.NewTxHitoryMarshaller(w)
 
-	return t.csv.Upload(context.Background(), "boil", par)
+	return t.dw.Download(context.Background(), boilmodels.TransactonHistories(collectConditions(cond)...).Query, marshaler)
 }
 
 func (t *txUsecase) List(ctx context.Context, cond domain.FindTxRequest) ([]*domain.TransactonHistory, error) {
+
+	txs, err := boilmodels.TransactonHistories(collectConditions(cond)...).All(ctx, t.db)
+	if err != nil {
+		return []*domain.TransactonHistory{}, err
+	}
+
+	domainTxs := make([]*domain.TransactonHistory, len(txs))
+
+	for i, tx := range txs {
+		domainTxs[i] = &domain.TransactonHistory{}
+		domain.BoilToDomainBinding(tx, domainTxs[i])
+	}
+
+	txs = nil
+
+	return domainTxs, nil
+}
+
+func collectConditions(cond domain.FindTxRequest) []qm.QueryMod {
 	var conds []qm.QueryMod = make([]qm.QueryMod, 0, 1)
 
 	if cond.TransactionID != nil {
@@ -118,20 +139,5 @@ func (t *txUsecase) List(ctx context.Context, cond domain.FindTxRequest) ([]*dom
 	if cond.PageSize > 0 {
 		conds = append(conds, qm.Offset(int(cond.PageNumber*cond.PageSize)), qm.Limit(int(cond.PageSize)))
 	}
-
-	txs, err := boilmodels.TransactonHistories(conds...).All(ctx, t.db)
-	if err != nil {
-		return []*domain.TransactonHistory{}, err
-	}
-
-	domainTxs := make([]*domain.TransactonHistory, len(txs))
-
-	for i, tx := range txs {
-		domainTxs[i] = &domain.TransactonHistory{}
-		domain.BoilToDomainBinding(tx, domainTxs[i])
-	}
-
-	txs = nil
-
-	return domainTxs, nil
+	return conds
 }

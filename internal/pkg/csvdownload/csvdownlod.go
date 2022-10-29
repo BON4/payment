@@ -3,15 +3,16 @@ package csvdownload
 import (
 	"context"
 	"database/sql"
-	"io"
 
 	"github.com/fatih/structs"
-	"github.com/gocarina/gocsv"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 )
 
 type CopyToSource interface {
-	//Takes rows, and returns parsed strings
-	Values(*sql.Rows) ([]string, error)
+	//Takes rows, and marshels them in to writer
+	Values(*sql.Rows) error
+	//Call done when there is no more rows
+	Done()
 }
 
 type CSVDownloader[T any] struct {
@@ -37,43 +38,27 @@ func NewCSVDownloader[T any](db *sql.DB, tableName, tag string) *CSVDownloader[T
 	}
 }
 
-func (c *CSVDownloader[T]) Download(ctx context.Context, out io.Writer, source CopyToSource) error {
-	w := gocsv.DefaultCSVWriter(out)
-
+func (c *CSVDownloader[T]) Download(ctx context.Context, q *queries.Query, source CopyToSource) error {
 	tx, err := c.db.Begin()
 
 	if err != nil {
 		return err
+
 	}
 
-	rows, err := tx.QueryContext(ctx, "select * from "+c.tableName)
-	if err != nil {
-		return err
-	}
-
-	names, err := rows.Columns()
-	if err != nil {
-		return err
-	}
-
-	err = w.Write(names)
+	rows, err := q.QueryContext(ctx, tx)
 	if err != nil {
 		return err
 	}
 
 	for rows.Next() && ctx.Err() == nil {
-		row, err := source.Values(rows)
-		if err != nil {
-			return err
-		}
-
-		err = w.Write(row)
+		err := source.Values(rows)
 		if err != nil {
 			return err
 		}
 	}
 
-	w.Flush()
+	source.Done()
 
 	err = rows.Close()
 	if err != nil {
