@@ -1,4 +1,0 @@
-app:
-  port: ":8080"
-
-db_conn: "postgresql://root:secret@localhost:5432/payment?sslmode=disable"
