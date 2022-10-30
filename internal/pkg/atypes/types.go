@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 	"time"
 
-	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 )
 
@@ -19,21 +18,29 @@ type DateTime struct {
 // All this to rune conversion is just to delete trailing zero in hour
 // Golang dont have specified format tor this
 func (date *DateTime) MarshalCSV() (string, error) {
-	s := []rune(date.Format("2006-01-02 15:04:05"))
-	if date.Hour() < 10 {
-		s = delChar(s, len(s)-8)
-	}
-	return string(s), nil
+	//s := []rune(date.Format("2006-01-02 15:04:05"))
+	//if date.Hour() < 10 {
+	//	s = delChar(s, len(s)-8)
+	//}
+	return date.Format("2006-01-02 15:04:05"), nil
+}
+
+func (date *DateTime) MarshalJSON() ([]byte, error) {
+	//s := []rune(date.Format("2006-01-02 15:04:05"))
+	//if date.Hour() < 10 {
+	//	s = delChar(s, len(s)-8)
+	//}
+	return []byte(`"` + date.Format("2006-01-02 15:04:05") + `"`), nil
 }
 
 // All this to rune conversion is just to delete trailing zero in hour
 // Golang dont have specified format tor this
 func (date *DateTime) String() string {
-	s := []rune(date.Format("2006-01-02 15:04:05"))
-	if date.Hour() < 10 {
-		s = delChar(s, len(s)-8)
-	}
-	return string(s)
+	//s := []rune(date.Format("2006-01-02 15:04:05"))
+	//if date.Hour() < 10 {
+	//	s = delChar(s, len(s)-8)
+	//}
+	return date.Format("2006-01-02 15:04:05")
 }
 
 // Convert the CSV string as internal date
@@ -43,7 +50,8 @@ func (date *DateTime) UnmarshalCSV(csv string) (err error) {
 }
 
 func (date DateTime) Value() (driver.Value, error) {
-	return pq.FormatTimestamp(date.Time), nil
+	//date.Format("2006-01-02 15:04:05")
+	return date.Time, nil
 }
 
 func (date *DateTime) Scan(src interface{}) (err error) {

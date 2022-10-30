@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +16,10 @@ import (
 	"github.com/BON4/payment/internal/transaction/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func setUpLogger(fileName string) (*logrus.Logger, error) {
@@ -39,6 +44,44 @@ func setUpLogger(fileName string) (*logrus.Logger, error) {
 	//Format log
 	logger.SetFormatter(&logrus.TextFormatter{})
 	return logger, nil
+}
+
+func runDBMigration(migrationURL string, dbSource string) error {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		return err
+	}
+
+	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
+}
+
+func waiForDb(waitSec int, driver, connectionString string) (*sql.DB, error) {
+	var err error
+	var db *sql.DB
+	for ; waitSec > 0; waitSec-- {
+		db, err = sql.Open(driver, connectionString)
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.Ping()
+		if err == nil {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+		continue
+	}
+
+	if db == nil {
+
+		return nil, errors.New("Cant connect to DB")
+	}
+
+	return db, err
 }
 
 type Server struct {
@@ -74,10 +117,16 @@ func NewServer(configPath string) (*Server, error) {
 
 	log.Infof("Loaded config: %+v", cfg)
 
-	db, err := sql.Open(cfg.DBDriver, cfg.DBconn)
+	db, err := waiForDb(60, cfg.DBDriver, cfg.DBconn)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
+	if err := runDBMigration(cfg.MirationURL, cfg.DBconn); err != nil {
+		return nil, err
+	}
+
+	log.Infof("Database migrated")
 
 	return &Server{
 		g:      g,
