@@ -109,7 +109,7 @@ func (t *TransctionHandler) Download(ctx *gin.Context) {
 }
 
 // @Summary      List
-// @Description  Retrives lis of json formaated objects
+// @Description  Retrives list of json formated objects
 // @Tags         payments
 // @Produce      json
 // @Param        page_size         query     int              false "page size"

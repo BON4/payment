@@ -16,6 +16,6 @@ COPY db/migration ./db/migration
 
 EXPOSE 8080
 ENV CGO_ENABLED=0
-GIN_MODE=release
+ENV GIN_MODE=release
 
 ENTRYPOINT ["/app/main" ]
