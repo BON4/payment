@@ -1,0 +1,179 @@
+basePath: /
+definitions:
+  http.uploadResponse:
+    properties:
+      upload_object_count:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This service provides loading/uploading csv file into/from DB.
+  title: Payments API
+  version: "1.0"
+paths:
+  /payments/csv:
+    get:
+      description: Downloads csv file.
+      parameters:
+      - description: page size
+        in: query
+        name: page_size
+        type: integer
+      - description: page number
+        in: query
+        name: page_number
+        type: integer
+      - description: search by transaction_id
+        in: query
+        name: transaction_id
+        type: integer
+      - description: search by terminal id
+        in: query
+        items:
+          type: integer
+        name: terminal_id
+        type: array
+      - description: search by status
+        enum:
+        - accepted
+        - declined
+        in: query
+        name: status
+        type: string
+      - description: search by payment_type  Enums(cash, card)
+        enum:
+        - cash
+        - card
+        in: query
+        name: payment_type
+        type: string
+      - description: search objects starting from specified date
+        format: dateTime
+        in: query
+        name: post_date_from
+        type: string
+      - description: search objects ending with specified date
+        format: dateTime
+        in: query
+        name: post_date_to
+        type: string
+      - description: search by the partially specified payment_narrative
+        in: query
+        name: payment_narrative
+        type: string
+      produces:
+      - multipart/form-data
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Download
+      tags:
+      - payments
+  /payments/json:
+    get:
+      description: Retrives lis of json formaated objects
+      parameters:
+      - description: page size
+        in: query
+        name: page_size
+        type: integer
+      - description: page number
+        in: query
+        name: page_number
+        type: integer
+      - description: search by transaction_id
+        in: query
+        name: transaction_id
+        type: integer
+      - description: search by terminal id
+        in: query
+        items:
+          type: integer
+        name: terminal_id
+        type: array
+      - description: search by status
+        enum:
+        - accepted
+        - declined
+        in: query
+        name: status
+        type: string
+      - description: search by payment_type  Enums(cash, card)
+        enum:
+        - cash
+        - card
+        in: query
+        name: payment_type
+        type: string
+      - description: search objects starting from specified date
+        format: dateTime
+        in: query
+        name: post_date_from
+        type: string
+      - description: search objects ending with specified date
+        format: dateTime
+        in: query
+        name: post_date_to
+        type: string
+      - description: search by the partially specified payment_narrative
+        in: query
+        name: payment_narrative
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: List
+      tags:
+      - payments
+  /payments/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads csv file and saves it in DB.
+      parameters:
+      - description: provide csv file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.uploadResponse'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Upload
+      tags:
+      - payments
+swagger: "2.0"

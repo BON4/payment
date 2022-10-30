@@ -1,0 +1,16 @@
+Method:POST URL:/payments/upload/example.csv Proto:HTTP/1.1
+ProtoMajor:1 ProtoMinor:1 Header:map[Accept:[application/json]
+Accept-Encoding:[gzip, deflate, br] Accept-Language:[en-US,en;q=0.5] Connection:[keep-alive]
+Content-Length:[33747]
+Content-Type:[multipart/form-data; boundary=---------------------------294302058121644230503817295765] Dnt:[1] Origin:[http://localhost:8080] Referer:[http://localhost:8080/swagger/index.html] Sec-Fetch-Dest:[empty] Sec-Fetch-Mode:[cors] Sec-Fetch-Site:[same-origin]
+User-Agent:[Mozilla/5.0 (X11; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0]] Body:0xc000074000 GetBody:<nil> ContentLength:33747 TransferEncoding:[] Close:false Host:localhost:8080 Form:map[] PostForm:map[]
+MultipartForm:<nil> Trailer:map[] RemoteAddr:172.18.0.1:35542 RequestURI:/payments/upload/example.csv TLS:<nil> Cancel:<nil> Response:<nil> ctx:0xc000074040
+
+
+Method:POST URL:/payments/upload/example.csv Proto:HTTP/1.1
+ProtoMajor:1 ProtoMinor:1 Header:map[Accept:[*/*]
+Accept-Encoding:[gzip, deflate, br] Connection:[close]
+Content-Length:[33740]
+Content-Type:[multipart/form-data; boundary=--------------------------044791101882283083336350]
+User-Agent:[Thunder Client (https://www.thunderclient.com)]] Body:0xc000074100 GetBody:<nil> ContentLength:33740 TransferEncoding:[] Close:true Host:localhost:8080 Form:map[] PostForm:map[]
+MultipartForm:<nil> Trailer:map[] RemoteAddr:172.18.0.1:35544 RequestURI:/payments/upload/example.csv TLS:<nil> Cancel:<nil> Response:<nil> ctx:0xc000074140

@@ -12,6 +12,10 @@ services:
       dockerfile: Dockerfile.debug
     ports:
       - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 100M
     environment:
       - DB_SOURCE=postgresql://root:secret@postgres:5432/payments?sslmode=disable
       - TEST_DB_SOURCE=postgresql://root:secret@postgres:5432/payments_test?sslmode=disable

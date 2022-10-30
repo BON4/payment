@@ -20,6 +20,10 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+
+	_ "github.com/BON4/payment/docs"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func setUpLogger(fileName string) (*logrus.Logger, error) {
@@ -127,6 +131,9 @@ func NewServer(configPath string) (*Server, error) {
 	}
 
 	log.Infof("Database migrated")
+
+	//Swagger
+	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	return &Server{
 		g:      g,

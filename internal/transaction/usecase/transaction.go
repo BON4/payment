@@ -28,6 +28,7 @@ func NewTxUsecase(db *sql.DB) domain.TxUsecase {
 	}
 }
 
+// NOT USED
 func (t *txUsecase) Create(ctx context.Context, txhist *domain.TransactonHistory) error {
 	boilTx := &boilmodels.TransactonHistory{}
 	domain.DomainToBoilBinding(txhist, boilTx)
@@ -41,6 +42,7 @@ func (t *txUsecase) Create(ctx context.Context, txhist *domain.TransactonHistory
 	return nil
 }
 
+// NOT USED
 func (t *txUsecase) BulkInsert(ctx context.Context, data []*domain.TransactonHistory) error {
 	tx, err := t.db.Begin()
 	if err != nil {

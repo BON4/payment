@@ -6,16 +6,12 @@ import (
 	"github.com/BON4/payment/internal/server"
 )
 
-// @title           Telegram Subs API
+// @title           Payments API
 // @version         1.0
-// @description     This service provide functionality for storing and managing privat telegram channels with subscription based payments for acessing content.
+// @description     This service provides loading/uploading csv file into/from DB.
 
 // @host      localhost:8080
 // @BasePath  /
-
-// @securityDefinitions.apiKey JWT
-// @in header
-// @name authorization
 func main() {
 	s, err := server.NewServer(".")
 	if err != nil {

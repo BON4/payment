@@ -19,19 +19,28 @@ func NewTransactionHandler(group *gin.RouterGroup, tUc domain.TxUsecase, logger 
 		tUc:    tUc,
 	}
 
-	group.POST("/upload/:file_name", t.Upload)
+	group.POST("/upload", t.Upload)
 	group.GET("/csv", t.Download)
 	group.GET("/json", t.List)
 }
 
-func (t *TransctionHandler) Upload(ctx *gin.Context) {
-	n := ctx.Param("file_name")
-	if len(n) < 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no filename provided"})
-		return
-	}
+type uploadResponse struct {
+	UploadedObjectCount int64 `json:"upload_object_count"`
+}
 
-	h, err := ctx.FormFile(n)
+// @Summary      Upload
+// @Description  Uploads csv file and saves it in DB.
+// @Tags         payments
+// @Accept       mpfd
+// @Produce      json
+// @Param        file        formData  file    true  "provide csv file"
+// @Success      200     {object}  uploadResponse
+// @Failure      400     {object}  error
+// @Failure      401     {object}  error
+// @Failure      500     {object}  error
+// @Router       /payments/upload [post]
+func (t *TransctionHandler) Upload(ctx *gin.Context) {
+	h, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -51,9 +60,27 @@ func (t *TransctionHandler) Upload(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"objectCount": count})
+	ctx.JSON(http.StatusOK, uploadResponse{UploadedObjectCount: count})
 }
 
+// @Summary      Download
+// @Description  Downloads csv file.
+// @Tags         payments
+// @Produce      mpfd
+// @Param        page_size         query     int              false "page size"
+// @Param        page_number       query     int              false "page number"
+// @Param        transaction_id    query     int              false "search by transaction_id"
+// @Param        terminal_id       query     []int            false "search by terminal id"
+// @Param        status            query     string           false "search by status"     Enums(accepted, declined)
+// @Param        payment_type      query     string           false "search by payment_type  Enums(cash, card)"
+// @Param        post_date_from    query     string           false "search objects starting from specified date"     Format(dateTime)
+// @Param        post_date_to      query     string           false "search objects ending with specified date"       Format(dateTime)
+// @Param        payment_narrative       query     string              false  "search by the partially specified payment_narrative"
+// @Success      200
+// @Failure      400     {object}  error
+// @Failure      401     {object}  error
+// @Failure      500     {object}  error
+// @Router       /payments/csv [get]
 func (t *TransctionHandler) Download(ctx *gin.Context) {
 	form := domain.FindTxRequest{}
 	if err := ctx.ShouldBind(&form); err != nil {
@@ -81,6 +108,24 @@ func (t *TransctionHandler) Download(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+// @Summary      List
+// @Description  Retrives lis of json formaated objects
+// @Tags         payments
+// @Produce      json
+// @Param        page_size         query     int              false "page size"
+// @Param        page_number       query     int              false "page number"
+// @Param        transaction_id    query     int              false "search by transaction_id"
+// @Param        terminal_id       query     []int            false "search by terminal id"
+// @Param        status            query     string           false "search by status"     Enums(accepted, declined)
+// @Param        payment_type      query     string           false "search by payment_type  Enums(cash, card)"
+// @Param        post_date_from    query     string           false "search objects starting from specified date"     Format(dateTime)
+// @Param        post_date_to      query     string           false "search objects ending with specified date"       Format(dateTime)
+// @Param        payment_narrative       query     string              false  "search by the partially specified payment_narrative"
+// @Success      200
+// @Failure      400     {object}  error
+// @Failure      401     {object}  error
+// @Failure      500     {object}  error
+// @Router       /payments/json [get]
 func (t *TransctionHandler) List(ctx *gin.Context) {
 	form := domain.FindTxRequest{}
 	if err := ctx.Bind(&form); err != nil {
