@@ -67,14 +67,14 @@ func NewServer(configPath string) (*Server, error) {
 		return nil, err
 	}
 
-	log, err := setUpLogger(cfg.AppConfig.LogFile)
+	log, err := setUpLogger(cfg.LogFile)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Infof("Loaded config: %+v", cfg)
 
-	db, err := sql.Open("postgres", cfg.DBconn)
+	db, err := sql.Open(cfg.DBDriver, cfg.DBconn)
 	if err != nil {
 		panic(err)
 	}
@@ -90,10 +90,10 @@ func NewServer(configPath string) (*Server, error) {
 func (s *Server) Run() error {
 	srv := &http.Server{
 		Handler: s.g,
-		Addr:    s.Cfg.AppConfig.Port,
+		Addr:    s.Cfg.Port,
 	}
 
-	s.Logger.Infof("Running on: %s", s.Cfg.AppConfig.Port)
+	s.Logger.Infof("Running on: %s", s.Cfg.Port)
 
 	//Swagger
 	//s.g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

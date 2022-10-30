@@ -1,33 +1,29 @@
 package config
 
-import (
-	"os"
-
-	"gopkg.in/yaml.v2"
-)
+import "github.com/spf13/viper"
 
 type ServerConfig struct {
-	AppConfig struct {
-		Port    string `yaml:"port"`
-		LogFile string `yaml:"log-file"`
-	} `yaml:"app"`
+	Port    string `mapstructure:"PORT"`
+	LogFile string `mapstructure:"LOGFILE"`
 
-	DBconn string `yaml:"db_conn"`
+	DBDriver    string `mapstructure:"DB_DRIVER"`
+	DBconn      string `mapstructure:"DB_SOURCE"`
+	TestDBconn  string `mapstructure:"TEST_DB_SOURCE"`
+	MirationURL string `mapstructure:"MIGRATION_URL"`
 }
 
-func LoadServerConfig(path string) (ServerConfig, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return ServerConfig{}, err
-	}
-	defer f.Close()
+func LoadServerConfig(path string) (config ServerConfig, err error) {
+	viper.AddConfigPath(path)
+	viper.SetConfigName("cfg")
+	viper.SetConfigType("env")
 
-	var cfg ServerConfig
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&cfg)
+	viper.AutomaticEnv()
+
+	err = viper.ReadInConfig()
 	if err != nil {
-		return ServerConfig{}, err
+		return
 	}
 
-	return cfg, nil
+	err = viper.Unmarshal(&config)
+	return
 }
